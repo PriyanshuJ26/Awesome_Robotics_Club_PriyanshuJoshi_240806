@@ -1,0 +1,88 @@
+import heapq
+
+grid = [
+    ['S', '.', '.', '.', '.', '~', '.', '.', '^', '.'],
+    ['#', '#', '#', '.', '.', '~', '#', '.', '^', '.'],
+    ['.', '.', '.', '#', '.', '.', '#', '.', '.', '.'],
+    ['.', '~', '~', '#', '.', '.', '.', '.', '.', '.'],
+    ['.', '.', '.', '.', '.', '#', '#', '#', '#', '.'],
+    ['^', '^', '.', '.', '.', '.', '.', '.', '~', '.'],
+    ['#', '.', '.', '.', '.', '#', '~', '~', '~', '.'],
+    ['.', '.', '#', '#', '.', '.', '.', '.', '.', '.'],
+    ['.', '.', '.', '.', '.', '^', '^', '^', '^', 'G'],
+    ['.', '#', '#', '#', '#', '#', '#', '.', '.', '.']
+]
+
+rows = len(grid)
+cols = len(grid[0])
+
+def cost(tile):
+    if tile == 'S' or tile == 'G':
+        return 0
+    elif tile == '.':
+        return 1
+    elif tile == '~':
+        return 3
+    elif tile == '^':
+        return 5
+    elif tile == '#':
+        return float('inf')  # impassable
+    else:
+        return float('inf')
+
+# Find start and goal positions
+start = None
+goal = None
+for r in range(rows):
+    for c in range(cols):
+        if grid[r][c] == 'S':
+            start = (r, c)
+        elif grid[r][c] == 'G':
+            goal = (r, c)
+
+# Directions: up, down, left, right
+directions = [(-1,0),(1,0),(0,-1),(0,1)]
+
+def dijkstra(start, goal):
+    heap = []
+    heapq.heappush(heap, (0, start))
+    costs = {start: 0}
+    parents = {start: None}
+
+    while heap:
+        current_cost, current = heapq.heappop(heap)
+        if current == goal:
+            break
+
+        for dr, dc in directions:
+            nr, nc = current[0] + dr, current[1] + dc
+            if 0 <= nr < rows and 0 <= nc < cols:
+                tile = grid[nr][nc]
+                tile_cost = cost(tile)
+                if tile_cost == float ('inf'):
+                    continue
+                new_cost = current_cost + tile_cost
+                if (nr, nc) not in costs or new_cost < costs[(nr, nc)]:
+                    costs[(nr, nc)] = new_cost
+                    parents[(nr, nc)] = current
+                    heapq.heappush(heap, (new_cost, (nr, nc)))
+
+    # Reconstruct path
+    path = []
+    node = goal
+    while node is not None:
+        path.append(node)
+        node = parents.get(node)
+    path.reverse()
+
+    return path, costs.get(goal, float('inf'))
+
+# Run the algorithm
+path, total_cost = dijkstra(start, goal)
+
+# Print the path step-by-step
+print("Path coordinates step-by-step:")
+for step in path:
+    print(step)
+
+print(f"\nTotal path cost: {total_cost}")
